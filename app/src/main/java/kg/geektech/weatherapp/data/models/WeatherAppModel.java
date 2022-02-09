@@ -52,9 +52,7 @@ public class WeatherAppModel {
     @Expose
     @TypeConverters({WindConverter.class})
     private Wind wind;
-    //    @SerializedName("snow")
-//    @Expose
-//    private Snow snow;
+
     @SerializedName("clouds")
     @Expose
     @TypeConverters({CloudsConverter.class})
@@ -71,7 +69,6 @@ public class WeatherAppModel {
     private Integer timezone;
     @SerializedName("id")
     @Expose
-    // @PrimaryKey //Аннотацией PrimaryKey мы помечаем поле, которое будет ключом в таблице
     private Integer id;
     @SerializedName("name")
     @Expose
