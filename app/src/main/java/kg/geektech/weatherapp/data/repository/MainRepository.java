@@ -21,8 +21,9 @@ public class MainRepository {
     private WeatherDao dao;
 
     @Inject
-    public MainRepository(WeatherApi api) {
+    public MainRepository(WeatherApi api,WeatherDao dao) {
         this.api = api;
+        this.dao = dao;
 
     }
 

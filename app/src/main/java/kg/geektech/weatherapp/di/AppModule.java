@@ -26,8 +26,8 @@ public abstract class AppModule {
 
 
     @Provides
-    public static MainRepository provideMainRepository(WeatherApi api){
-        return new MainRepository(api);
+    public static MainRepository provideMainRepository(WeatherApi api,WeatherDao dao){
+        return new MainRepository(api,dao);
     }
 
     @Provides
