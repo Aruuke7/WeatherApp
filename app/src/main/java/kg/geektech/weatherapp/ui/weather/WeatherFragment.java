@@ -24,6 +24,7 @@ import com.bumptech.glide.Glide;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -34,7 +35,11 @@ import kg.geektech.weatherapp.R;
 import kg.geektech.weatherapp.base.BaseFragment;
 import kg.geektech.weatherapp.common.Resource;
 import kg.geektech.weatherapp.data.local.WeatherDao;
+import kg.geektech.weatherapp.data.models.Main;
+import kg.geektech.weatherapp.data.models.Sys;
+import kg.geektech.weatherapp.data.models.Weather;
 import kg.geektech.weatherapp.data.models.WeatherAppModel;
+import kg.geektech.weatherapp.data.models.Wind;
 import kg.geektech.weatherapp.data.remote.WeatherApi;
 import kg.geektech.weatherapp.databinding.FragmentWeatherBinding;
 
@@ -44,6 +49,11 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     private WeatherViewModel viewModel;
     private WeatherFragmentArgs args;
     private NavController controller;
+    private WeatherAppModel weather;
+    private Main main;
+    private Wind wind;
+    private Sys sys;
+    private ArrayList<Weather> weatherList = new ArrayList<>();
     @Inject
     WeatherDao dao;
 
@@ -51,8 +61,8 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(getArguments()!=null){
-         args = WeatherFragmentArgs.fromBundle(getArguments());
-}
+            args = WeatherFragmentArgs.fromBundle(getArguments());
+        }
     }
     @Inject
     WeatherApi api;
@@ -70,30 +80,38 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
 
     @Override
     protected void setupObservers() {
-        viewModel.weatherLiveData.observe(getViewLifecycleOwner(), new Observer<Resource<WeatherAppModel>>() {
-            @Override
-            public void onChanged(Resource<WeatherAppModel> resource) {
-                switch (resource.status) {
-                    case SUCCESS:
-                        setWeather(resource.data);
-                        viewBinding.progress.setVisibility(View.GONE);
-                        break;
-                    case LOADING:
-                        viewBinding.progress.setVisibility(View.VISIBLE);
-                        break;
+        viewModel.weatherLiveData.observe(getViewLifecycleOwner(), response -> {
+            switch (response.status) {
+                case SUCCESS:
+                    wind = response.data.getWind();
+                    weather = response.data;
+                    main = response.data.getMain();
+                    sys =  response.data.getSys();
+                    weatherList = (ArrayList<Weather>) response.data.getWeather();
+                    viewBinding.progress.setVisibility(View.GONE);
+                    setWeather();
+                    break;
+                case LOADING:
+                    viewBinding.progress.setVisibility(View.VISIBLE);
+                    break;
 
-                    case ERROR:
-                        viewBinding.progress.setVisibility(View.GONE);
-                        Toast.makeText(requireActivity(), resource.msg, Toast.LENGTH_LONG).show();
-                        setWeather(dao.getWeather());
-                        break;
-                }
+                case ERROR:
+                    viewBinding.progress.setVisibility(View.GONE);
+                    Toast.makeText(requireActivity(),"Нет Интернета , скачиваю последние загруженные данные", Toast.LENGTH_LONG).show();
+                    viewBinding.progress.setVisibility(View.GONE);
+                    wind = dao.getWeather().getWind();
+                    main = dao.getWeather().getMain();
+                    sys = dao.getWeather().getSys();
+                    weather = dao.getWeather();
+                    weatherList = (ArrayList<Weather>) dao.getWeather().getWeather();
+                    setWeather();
+                    break;
             }
         });
     }
 
     @SuppressLint("SetTextI18n")
-    private void setWeather(WeatherAppModel data) {
+    private void setWeather() {
 
         Date date = Calendar.getInstance().getTime();
         @SuppressLint("SimpleDateFormat") DateFormat formatter = new SimpleDateFormat("EEEE, dd MMM yyyy | hh:mm");
@@ -101,19 +119,19 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
         viewBinding.tvCurrentDate.setText(today);
 
 
-        viewBinding.currentCity.setText(data.getName());
-        viewBinding.tvWeatherStatus.setText(data.getWeather().get(0).getMain());
-        viewBinding.tvCurrentTemp.setText(String.valueOf((int) Math.round(data.getMain().getTemp())));
-        viewBinding.tvCrntTempUp.setText(String.valueOf((int) Math.round(data.getMain().getTempMax()))+" °C");
-        viewBinding.tvCrntTempDown.setText(String.valueOf((int) Math.round(data.getMain().getTempMin()))+" °C");
-        viewBinding.tvHumidityPercents.setText(String.valueOf(data.getMain().getHumidity())+"%");
+        viewBinding.currentCity.setText(weather.getName());
+        viewBinding.tvWeatherStatus.setText(weather.getWeather().get(0).getMain());
+        viewBinding.tvCurrentTemp.setText(String.valueOf((int) Math.round(main.getTemp())));
+        viewBinding.tvCrntTempUp.setText((int) Math.round(main.getTempMax()) +" °C");
+        viewBinding.tvCrntTempDown.setText((int) Math.round(main.getTempMin()) +" °C");
+        viewBinding.tvHumidityPercents.setText(main.getHumidity() +"%");
         viewBinding.tvHumidity.setText("Humidity");
-        viewBinding.tvMBar.setText(String.valueOf(data.getMain().getPressure())+"mBar");
+        viewBinding.tvMBar.setText(main.getPressure() +"mBar");
         viewBinding.tvPressure.setText("Pressure");
-        viewBinding.tvWindSpeed.setText(String.valueOf((int) Math.round(data.getWind().getSpeed()))+"km/h");
+        viewBinding.tvWindSpeed.setText((int) Math.round(wind.getSpeed()) +"km/h");
         viewBinding.tvWind.setText("Wind");
 
-        Integer sunrise = data.getSys().getSunrise();
+        Integer sunrise = sys.getSunrise();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(sunrise);
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("h:mm");
@@ -121,7 +139,7 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
         viewBinding.tvSunriseTime.setText(dateFormat.format(calendar.getTime()));
         viewBinding.tvSunrise.setText("Sunrise");
 
-        Integer sunset = data.getSys().getSunrise();
+        Integer sunset = sys.getSunrise();
         Calendar cal = Calendar.getInstance();
         calendar.setTimeInMillis(sunset);
         @SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh:mm");
@@ -140,7 +158,7 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
 
 
 
-        String urlImg = "https://openweathermap.org/img/wn/" + data.getWeather().get(0).getIcon() + ".png";
+        String urlImg = "https://openweathermap.org/img/wn/" + weatherList.get(0).getIcon() + ".png";
         Glide.with(viewBinding.getRoot())
                 .load(urlImg)
                 .centerCrop()
@@ -165,13 +183,9 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
         viewModel.setCityName(args.getCity());
         viewModel.getWeather();
         controller = Navigation.findNavController(requireActivity(),R.id.nav_host);
-        viewBinding.currentCity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                controller.navigate(R.id.action_weatherFragment_to_cityFragment);
-            }
-        });
-       // adapter = new WeatherAdapter();
-       // viewBinding.rvForecast.setAdapter(adapter);
+        viewBinding.currentCity.setOnClickListener(v
+                -> controller.navigate(R.id.action_weatherFragment_to_cityFragment));
+        // adapter = new WeatherAdapter();
+        // viewBinding.rvForecast.setAdapter(adapter);
     }
 }

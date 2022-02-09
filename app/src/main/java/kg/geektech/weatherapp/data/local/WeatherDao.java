@@ -12,6 +12,6 @@ public interface WeatherDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(WeatherAppModel weatherAppModel);
 
-    @Query("SELECT * FROM weather")
+    @Query("SELECT * FROM weatherappmodel")
     WeatherAppModel getWeather();
 }

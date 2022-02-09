@@ -19,13 +19,21 @@ import kg.geektech.weatherapp.data.local.converter.SysConverter;
 import kg.geektech.weatherapp.data.local.converter.WeatherConverter;
 import kg.geektech.weatherapp.data.local.converter.WindConverter;
 
-@Entity(tableName = "weather")
+@Entity
 public class WeatherAppModel {
 
-    @SerializedName("coord")
-    @Expose
-    @TypeConverters({CoordConverter.class})
-    private Coord coord;
+
+    @PrimaryKey
+    private long idRoom;
+
+    public long getIdRoom() {
+        return idRoom;
+    }
+
+    public void setIdRoom(long idRoom) {
+        this.idRoom = idRoom;
+    }
+
     @SerializedName("weather")
     @Expose
     @TypeConverters({WeatherConverter.class})
@@ -33,9 +41,9 @@ public class WeatherAppModel {
     @SerializedName("base")
     @Expose
     private String base;
-    @TypeConverters({MainConverter.class})
     @SerializedName("main")
     @Expose
+    @TypeConverters({MainConverter.class})
     private Main main;
     @SerializedName("visibility")
     @Expose
@@ -44,6 +52,9 @@ public class WeatherAppModel {
     @Expose
     @TypeConverters({WindConverter.class})
     private Wind wind;
+    //    @SerializedName("snow")
+//    @Expose
+//    private Snow snow;
     @SerializedName("clouds")
     @Expose
     @TypeConverters({CloudsConverter.class})
@@ -58,10 +69,9 @@ public class WeatherAppModel {
     @SerializedName("timezone")
     @Expose
     private Integer timezone;
-
-    @PrimaryKey
     @SerializedName("id")
     @Expose
+    // @PrimaryKey //Аннотацией PrimaryKey мы помечаем поле, которое будет ключом в таблице
     private Integer id;
     @SerializedName("name")
     @Expose
@@ -70,13 +80,7 @@ public class WeatherAppModel {
     @Expose
     private Integer cod;
 
-    public Coord getCoord() {
-        return coord;
-    }
 
-    public void setCoord(Coord coord) {
-        this.coord = coord;
-    }
 
     public List<Weather> getWeather() {
         return weather;
@@ -117,6 +121,14 @@ public class WeatherAppModel {
     public void setWind(Wind wind) {
         this.wind = wind;
     }
+
+//    public Snow getSnow() {
+//        return snow;
+//    }
+//
+//    public void setSnow(Snow snow) {
+//        this.snow = snow;
+//    }
 
     public Clouds getClouds() {
         return clouds;

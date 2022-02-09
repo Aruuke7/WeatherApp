@@ -13,7 +13,7 @@ import kg.geektech.weatherapp.data.local.converter.WeatherConverter;
 import kg.geektech.weatherapp.data.local.converter.WindConverter;
 import kg.geektech.weatherapp.data.models.WeatherAppModel;
 
-@Database(entities = {WeatherAppModel.class},version = 1)
+@Database(entities = {WeatherAppModel.class},version = 3)
 @TypeConverters({MainConverter.class,WindConverter.class,CloudsConverter.class,CoordConverter.class,WeatherConverter.class,
         WeatherAppModelConverter.class, SysConverter.class})
 

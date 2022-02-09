@@ -41,7 +41,9 @@ public class MainRepository {
             public void onResponse(Call<WeatherAppModel> call, Response<WeatherAppModel> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     liveData.setValue(Resource.success(response.body()));
-                    dao.insert(response.body());
+                    WeatherAppModel myWeather = response.body();
+                    myWeather.setIdRoom(0);
+                    dao.insert(myWeather);
                 } else {
                     liveData.setValue(Resource.error(response.message(), null));
                 }
