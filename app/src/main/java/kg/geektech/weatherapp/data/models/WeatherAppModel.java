@@ -122,14 +122,6 @@ public class WeatherAppModel {
         this.wind = wind;
     }
 
-//    public Snow getSnow() {
-//        return snow;
-//    }
-//
-//    public void setSnow(Snow snow) {
-//        this.snow = snow;
-//    }
-
     public Clouds getClouds() {
         return clouds;
     }
