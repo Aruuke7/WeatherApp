@@ -27,7 +27,7 @@
         <action
             android:id="@+id/action_cityFragment_to_weatherFragment"
             app:destination="@id/weatherFragment" >
-            <argument android:name="city"
+            <argument android:name="Latlng"
                 app:argType="string"
                 app:nullable="true"/>
         </action>

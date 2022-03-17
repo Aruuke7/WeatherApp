@@ -6,24 +6,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.city.CityFragment">
 
-   <EditText
-       android:id="@+id/edit_text"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       android:layout_marginTop="250dp"
-       app:layout_constraintStart_toStartOf="parent"
-       app:layout_constraintEnd_toEndOf="parent"
-       app:layout_constraintTop_toTopOf="parent"/>
-
-    <Button
-        android:id="@+id/button"
+    <fragment
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="done"
-        android:layout_marginTop="32dp"
-        android:background="@color/light_blue"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_text"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_height="match_parent"
+        android:id="@+id/map"
+        tools:context=".MapsActivity"
+        android:name="com.google.android.gms.maps.SupportMapFragment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

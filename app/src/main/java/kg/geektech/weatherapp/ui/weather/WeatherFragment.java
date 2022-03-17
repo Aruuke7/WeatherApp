@@ -61,7 +61,7 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(getArguments()!=null){
-            args = WeatherFragmentArgs.fromBundle(getArguments());
+            String ltLn = getArguments().getString("ll");
         }
     }
     @Inject
