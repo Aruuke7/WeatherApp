@@ -21,7 +21,7 @@ public class MainRepository {
     private WeatherDao dao;
 
     @Inject
-    public MainRepository(WeatherApi api,WeatherDao dao) {
+    public MainRepository(WeatherApi api, WeatherDao dao) {
         this.api = api;
         this.dao = dao;
 
@@ -31,12 +31,14 @@ public class MainRepository {
         this.city = city;
     }
 
-    public MutableLiveData<Resource<WeatherAppModel>> getWeather() {
+
+
+    public MutableLiveData<Resource<WeatherAppModel>> getWeatherByLatLon(double lat, double lon) {
 
         MutableLiveData<Resource<WeatherAppModel>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
-        api.getWeather(city,BASE_URL,"metric").enqueue(new Callback<WeatherAppModel>() {
+        api.getWeatherByLatLon(lat, lon, BASE_URL, "metric").enqueue(new Callback<WeatherAppModel>() {
             @Override
             public void onResponse(Call<WeatherAppModel> call, Response<WeatherAppModel> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -52,7 +54,6 @@ public class MainRepository {
             @Override
             public void onFailure(Call<WeatherAppModel> call, Throwable t) {
                 liveData.setValue(Resource.error(t.getLocalizedMessage(), null));
-
             }
         });
         return liveData;

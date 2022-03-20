@@ -1,21 +1,24 @@
 package kg.geektech.weatherapp.ui.weather;
 
 
-import static kg.geektech.weatherapp.common.Status.ERROR;
-import static kg.geektech.weatherapp.common.Status.LOADING;
-import static kg.geektech.weatherapp.common.Status.SUCCESS;
+import static android.content.Context.LOCATION_SERVICE;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
-
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.Observer;
+import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -33,7 +36,6 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 import kg.geektech.weatherapp.R;
 import kg.geektech.weatherapp.base.BaseFragment;
-import kg.geektech.weatherapp.common.Resource;
 import kg.geektech.weatherapp.data.local.WeatherDao;
 import kg.geektech.weatherapp.data.models.Main;
 import kg.geektech.weatherapp.data.models.Sys;
@@ -44,7 +46,7 @@ import kg.geektech.weatherapp.data.remote.WeatherApi;
 import kg.geektech.weatherapp.databinding.FragmentWeatherBinding;
 
 @AndroidEntryPoint
-public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
+public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> implements LocationListener {
 
     private WeatherViewModel viewModel;
     private WeatherFragmentArgs args;
@@ -54,16 +56,26 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     private Wind wind;
     private Sys sys;
     private ArrayList<Weather> weatherList = new ArrayList<>();
+    private LocationManager locationManager;
+    private final String[] perms = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+    };
     @Inject
     WeatherDao dao;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(getArguments()!=null){
-            String ltLn = getArguments().getString("ll");
+        ActivityCompat.requestPermissions(
+                requireActivity(), perms, 1
+        );
+        locationManager = (LocationManager) requireActivity().getSystemService(LOCATION_SERVICE);
+        if (getArguments() != null) {
+            args = WeatherFragmentArgs.fromBundle(getArguments());
         }
     }
+
     @Inject
     WeatherApi api;
 
@@ -81,12 +93,13 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     @Override
     protected void setupObservers() {
         viewModel.weatherLiveData.observe(getViewLifecycleOwner(), response -> {
+            getCurrentLocation();
             switch (response.status) {
                 case SUCCESS:
                     wind = response.data.getWind();
                     weather = response.data;
                     main = response.data.getMain();
-                    sys =  response.data.getSys();
+                    sys = response.data.getSys();
                     weatherList = (ArrayList<Weather>) response.data.getWeather();
                     viewBinding.progress.setVisibility(View.GONE);
                     setWeather();
@@ -97,7 +110,7 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
 
                 case ERROR:
                     viewBinding.progress.setVisibility(View.GONE);
-                    Toast.makeText(requireActivity(),"Нет Интернета , скачиваю последние загруженные данные", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(), "Нет Интернета , скачиваю последние загруженные данные", Toast.LENGTH_LONG).show();
                     viewBinding.progress.setVisibility(View.GONE);
                     wind = dao.getWeather().getWind();
                     main = dao.getWeather().getMain();
@@ -122,13 +135,13 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
         viewBinding.currentCity.setText(weather.getName());
         viewBinding.tvWeatherStatus.setText(weather.getWeather().get(0).getMain());
         viewBinding.tvCurrentTemp.setText(String.valueOf((int) Math.round(main.getTemp())));
-        viewBinding.tvCrntTempUp.setText((int) Math.round(main.getTempMax()) +" °C");
-        viewBinding.tvCrntTempDown.setText((int) Math.round(main.getTempMin()) +" °C");
-        viewBinding.tvHumidityPercents.setText(main.getHumidity() +"%");
+        viewBinding.tvCrntTempUp.setText((int) Math.round(main.getTempMax()) + " °C");
+        viewBinding.tvCrntTempDown.setText((int) Math.round(main.getTempMin()) + " °C");
+        viewBinding.tvHumidityPercents.setText(main.getHumidity() + "%");
         viewBinding.tvHumidity.setText("Humidity");
-        viewBinding.tvMBar.setText(main.getPressure() +"mBar");
+        viewBinding.tvMBar.setText(main.getPressure() + "mBar");
         viewBinding.tvPressure.setText("Pressure");
-        viewBinding.tvWindSpeed.setText((int) Math.round(wind.getSpeed()) +"km/h");
+        viewBinding.tvWindSpeed.setText((int) Math.round(wind.getSpeed()) + "km/h");
         viewBinding.tvWind.setText("Wind");
 
         Integer sunrise = sys.getSunrise();
@@ -157,7 +170,6 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
         viewBinding.ivWind.setImageResource(R.drawable.ic_wind);
 
 
-
         String urlImg = "https://openweathermap.org/img/wn/" + weatherList.get(0).getIcon() + ".png";
         Glide.with(viewBinding.getRoot())
                 .load(urlImg)
@@ -180,12 +192,40 @@ public class WeatherFragment extends BaseFragment<FragmentWeatherBinding> {
     @Override
     protected void setupViews() {
         viewModel = new ViewModelProvider(requireActivity()).get(WeatherViewModel.class);
-        viewModel.setCityName(args.getCity());
-        viewModel.getWeather();
-        controller = Navigation.findNavController(requireActivity(),R.id.nav_host);
+        viewModel.getWeatherByLatLon(args.getLat(), args.getLon());
+        controller = Navigation.findNavController(requireActivity(), R.id.nav_host);
         viewBinding.currentCity.setOnClickListener(v
                 -> controller.navigate(R.id.action_weatherFragment_to_cityFragment));
-        // adapter = new WeatherAdapter();
-        // viewBinding.rvForecast.setAdapter(adapter);
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation();
+            } else {
+                ActivityCompat.requestPermissions(
+                        requireActivity(), perms, 1
+                );
+            }
+        }
+    }
+
+    private void getCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }else {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
+        }
+    }
+
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        viewModel.getWeatherByLatLon(location.getLatitude(),location.getLongitude());
+
     }
 }

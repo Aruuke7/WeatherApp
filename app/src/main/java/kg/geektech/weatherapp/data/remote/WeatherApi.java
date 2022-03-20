@@ -13,7 +13,15 @@ public interface WeatherApi {
     Call<WeatherAppModel> getWeather(
             @Query("q") String city,
             @Query("appid") String apikey,
-                        @Query("units") String units
+            @Query("units") String units
 
+    );
+
+    @GET("weather?")
+    Call<WeatherAppModel> getWeatherByLatLon(
+            @Query("lat") double lat,
+            @Query("lon") double lon,
+            @Query("appid") String apikey,
+            @Query("units") String units
     );
 }

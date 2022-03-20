@@ -27,18 +27,16 @@ import kg.geektech.weatherapp.ui.weather.WeatherFragmentDirections;
 
 
 @AndroidEntryPoint
-public class CityFragment extends BaseFragment<FragmentCityBinding> implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class CityFragment extends BaseFragment<FragmentCityBinding> implements OnMapReadyCallback {
     private NavController controller;
     private GoogleMap googleMap;
     private MarkerOptions options;
-
 
 
     @Override
     protected FragmentCityBinding bind() {
         return FragmentCityBinding.inflate(getLayoutInflater());
     }
-
 
 
     @Override
@@ -73,19 +71,26 @@ public class CityFragment extends BaseFragment<FragmentCityBinding> implements O
 
                 googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder()
                         .target(latLng)
-                        .zoom(10F)
+                        .zoom(5F)
                         .bearing(23)
                         .build()));
 
             }
         });
-    }
 
-    @Override
-    public boolean onMarkerClick(@NonNull Marker marker) {
-        controller = Navigation.findNavController(requireActivity(), R.id.nav_host);
-        String optionsLatlng = String.valueOf(options.getPosition());
-        controller.navigate((NavDirections) CityFragmentDirections.actionCityFragmentToWeatherFragment(optionsLatlng));
-        return true;
+        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+                controller = Navigation.findNavController(requireActivity(), R.id.nav_host);
+                controller.navigate((NavDirections)
+                        CityFragmentDirections
+                                .actionCityFragmentToWeatherFragment(
+                                        (float) marker.getPosition().latitude,
+                                        (float) marker.getPosition().longitude
+                                )
+                );
+                return false;
+            }
+        });
     }
 }
